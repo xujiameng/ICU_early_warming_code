@@ -69,43 +69,64 @@ new_x=zzz;
 new_y=data(zzz);
 
 % figure(1)
-% plot(new_x,new_y,'-')
+% plot(new_x,new_y,'-','LineWidth',2)
 % hold on 
-% plot(new_x,new_y,'*')
+% plot(new_x,new_y,'*','LineWidth',2)
+% plot(DA,'b','LineWidth',1)
+% plot([16:28],DA([16:28]),'-','LineWidth',4)
+% xlabel('特征量')
+% ylabel('十折交叉验证BER平均值')
+% 
+% plot([19,27],DA([19,27]),'d','LineWidth',2)
+% x=[19,27];y=DA([19,27]);
+% for i=1:length(x)
+%     text(x(i),y(i),['(' num2str(x(i)) ',' num2str(y(i)) ')'])  
+% end
+
+
 
 for i=2:length(new_x)
     d_x=new_x(i)-new_x(i-1);
     d_y=new_y(i-1)-new_y(i);
     d(i-1)=d_y/d_x;         %计算滤波后BER平均值的一阶导数，即性价比，某阶段中增加一个特征值能降低多上BER
 end
+
 % figure(2)
-% plot(d,'p')
+% plot(d,'p','LineWidth',2)
 % hold on 
-% plot(d,'-')
-% 
+% plot(d,'-','LineWidth',2)
+% plot([8,15,18],d([8,15,18]),'d','LineWidth',5)
+% ylabel('一阶导数')
+
+% zz=diff(d);
 % figure(3)
-% plot(diff(d),'p')
+% plot(zz,'p','LineWidth',2)
 % hold on 
-% plot(diff(d),'-')
+% plot(zz,'-','LineWidth',2)
+% plot([10,16,18],zz([10,16,18]),'d','LineWidth',4)
+% ylabel('二阶导数')
 
 clear t
 t=1;
 for i=1:length(d)-1 
-    if sum(find(d(i)<d(i+1:end)))==0  &   sum(   d(i+1:end)  >0.005 )==0      %限制节点处性价比大于后续位置可能被选择的节点，且导数值小于0.005
+    if sum(find(d(i)<d(i+1:end)))==0  &   sum(   d(i+1:end)  >0.005 )==0    %限制节点处性价比大于后续位置可能被选择的节点，且导数值小于0.005
 %        [~,loc]= min(  abs(  diff(  d(i:i+ceil( length(d(i:end))/3  )))) );
+       dd=  diff(  d(i:i+ceil( length(d(i:end))/4  )));
+%        dd(dd<0)=100;
        [~,loc]= min(  abs(  diff(  d(i:i+ceil( length(d(i:end))/4  )))) );      %寻找节点后数据段前1/4的二阶导数最接近于零的位置  p
+%         [~,loc]= min( dd )
        tt=i+loc;
-       fin_1(t)=new_x(tt)+1 ;    %计算p对应的特征数量
-%        fin_2(t)=new_x(i)+1 ;
+       fin_1(t)=new_x(tt) ;    %计算p对应的特征数量
+       fin_2(t)=new_x(i)+1 ;
        t=t+1;
     end
 end
 
-TTT=ceil(151*0.05);  %创建在点P附近继续搜索的空间长度
-% TTT=10;
-DATA=DA(fin_1(1)-TTT:fin_1(1));  %提取以点P为中心的二次检索的数据段
+% TTT=ceil(151*0.05);  %创建在点P附近继续搜索的空间长度
+TTT=abs(fin_2(1)-fin_1(1));
+DATA=DA(fin_1(1)-TTT:fin_1(1));  %提取从关键点1到关键点2的数据段
 [~,loc]= sort(  DA(fin_1(1)-TTT:fin_1(1)),'descend');  %对该数据段数值进行降序排序，并获取其降序前的位置
-if  (  abs( DATA(loc(end-1))-DATA(loc(end)) ) /  abs( loc(end-1)-loc(end) )   )<0.005;      %计算最小BER最小位置与次小位置的一阶导数，如果小于阈值执行以下命令
+if  (  abs( DATA(loc(end-1))-DATA(loc(end)) ) /  abs( loc(end-1)-loc(end) )   )<0.001;      %计算最小BER最小位置与次小位置的一阶导数，如果小于阈值执行以下命令
     F=find(DA==DATA(loc(end-1)));   %如果一接导数小于0.005，认为增加一小段特征量以减少不足0.005的BER是不值得的，认为次小BER对应的特征子集为最小特征子集
 else
     F=find(DA==DATA(loc(end)));%如果一接导数大于0.005，认为增加一小段特征量以减少大于0.005的BER是值得的，认为最小BER对应的特征子集为最小特征子集
@@ -113,7 +134,3 @@ end
 
 Fin=F(1); %输出最小特征子集特征数量
 end
-
-
-
-
