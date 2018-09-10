@@ -38,7 +38,7 @@ end
 %% 以下均是根据MEWAS评分标准编写，可见MEWAS评分标准
 pingfen(jisuan_MEWS(:,1)< 40 , 1)=2;
 pingfen(       ( jisuan_MEWS(:,1)> 41 & jisuan_MEWS(:,1)< 50 )   , 1)=1;
-pingfen(       ( jisuan_MEWS(:,1)> 100 & jisuan_MEWS(:,1)< 51 )   , 1)=0;
+pingfen(       ( jisuan_MEWS(:,1)> 51 & jisuan_MEWS(:,1)< 100 )   , 1)=0;
 pingfen(       ( jisuan_MEWS(:,1)> 101 & jisuan_MEWS(:,1)< 110 )   , 1)=1;
 pingfen(       ( jisuan_MEWS(:,1)> 111 & jisuan_MEWS(:,1)< 130 )   , 1)=2;
 pingfen(       ( jisuan_MEWS(:,1)> 130 )   , 1)=3;
