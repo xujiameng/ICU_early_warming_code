@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OneHotEncoder
 
-data = pd.read_csv("sofa.csv")
+data = pd.read_csv("sofa.csv")    #此处数据为仅仅对无创血压数据补齐后的数据集
 
 tempData = data.loc[:, ['subject_id', 'hadm_id', 'icustay_id'
                         ,'age','bmi','gender','icutype','death','vent','sysbp','diasbp','meanbp'
