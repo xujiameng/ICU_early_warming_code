@@ -244,8 +244,8 @@ eva_comm_best = RUN_2(best_th)
 
 print(' done_2  eva_comm_best')
 
-#eva_comm_50 = RUN_2(50)
-#
-#print(' done_3  eva_comm_50')
+eva_comm_50 = RUN_2(50) #计算患者在默认阈值情况下预测结果的各项指标
+
+print(' done_3  eva_comm_50')
 
 
