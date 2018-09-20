@@ -1,5 +1,5 @@
 ﻿# Description 
-# 程序功能：使用随机森林对缺失的无创数据进行插补
+# 程序功能：使用随机森林对缺失的无创血压数据进行插补，使用参数由gender','icutype','age','vent'
 # 程序流程：
 #       Step1：对数值为标量的变量进行独热编码
 #       Step2：训练随机森林模型并对缺失值进行预测
@@ -39,7 +39,7 @@ def nbpRandom(tempData, nbp, abp):
     nbpNull = abpNotNull[abpNotNull[nbp].isnull()]  # 测试集
     nbpNotNull = abpNotNull[abpNotNull[nbp].notnull()]  # 训练集
     
-    linshix = OneHotEncoder(sparse = False).fit_transform( nbpNotNull[['gender','icutype','death','vent']])  # 删除模型学习的训练集中的含有空值的患者信息
+    linshix = OneHotEncoder(sparse = False).fit_transform( nbpNotNull[['gender','icutype','vent']])  # 删除模型学习的训练集中的含有空值的患者信息
  
 
     X = np.hstack((linshix , nbpNotNull.loc[:, ['age',abp]]))

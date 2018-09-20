@@ -1,18 +1,20 @@
-﻿-- Materialized View: mimiciii.new_0709_vitalsfirstday1
+﻿-- Materialized View: mimiciii.new_0709_vitalsfirstday2
 
--- DROP MATERIALIZED VIEW mimiciii.new_0709_vitalsfirstday1;
+-- DROP MATERIALIZED VIEW mimiciii.new_0709_vitalsfirstday2;
 
 
 -- Description 
---   该程序功能为：计算患者进入ICU前12小时生理数据的衍生变量
---   程序流程为：选择符合要求的患者生理数据，并求解其最大值，最小值，平均值，方差，标准差，四分位数，极差。
+--   该程序功能为：计算患者进入ICU 12-24 小时生理数据的衍生变量
+--   程序流程为：选择符合要求的患者生理数据，包括有患者编号，ICU类型，心率，呼吸频率，体温，血氧饱和度，无创收缩压、舒张压、平均压
 
---   程序运行结果；生成一个包含患者进入ICU 前12小时的生理数据的衍生变量的表
-
-
+--   程序运行结果；生成一个包含患者进入ICU 12-24 小时的生理数据的衍生变量的表
 
 
-CREATE MATERIALIZED VIEW mimiciii.new_0709_vitalsfirstday1 AS 
+
+
+
+
+CREATE MATERIALIZED VIEW mimiciii.new_0709_vitalsfirstday2 AS 
  SELECT a.subject_id,
     a.hadm_id,
     a.icustay_id,
@@ -79,10 +81,10 @@ CREATE MATERIALIZED VIEW mimiciii.new_0709_vitalsfirstday1 AS
     a.nimeanbp_perc_25,
     a.nimeanbp_perc_50,
     a.nimeanbp_perc_75
-   FROM mimiciii.new_0709_ready_vitalsfirstday1 a
-     LEFT JOIN mimiciii.new_vitalsfirstday1 b ON a.subject_id = b.subject_id AND a.hadm_id = b.hadm_id AND a.icustay_id = b.icustay_id
+   FROM mimiciii.new_0709_ready_vitalsfirstday2 a
+     LEFT JOIN mimiciii.new_vitalsfirstday2 b ON a.subject_id = b.subject_id AND a.hadm_id = b.hadm_id AND a.icustay_id = b.icustay_id
   ORDER BY a.subject_id, a.hadm_id, a.icustay_id
 WITH DATA;
 
-ALTER TABLE mimiciii.new_0709_vitalsfirstday1
+ALTER TABLE mimiciii.new_0709_vitalsfirstday2
   OWNER TO postgres;
