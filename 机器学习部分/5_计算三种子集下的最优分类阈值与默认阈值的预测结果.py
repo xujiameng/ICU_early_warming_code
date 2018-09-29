@@ -44,9 +44,6 @@ from sklearn.grid_search import GridSearchCV
 
 from sklearn.model_selection import StratifiedKFold
 
-alltime_start=time.time()
-
-
 
 
 
@@ -103,6 +100,8 @@ def RUN():   #根据训练集与验证集获取最优分类阈值
     times=0
     position=[]
     for train, test in skf.split(tiaocan_train,tiaocan_train_test):
+        alltime_start=time.time()
+
         times=times+1
 
         x_train=tiaocan_train[train]
@@ -160,7 +159,8 @@ def RUN():   #根据训练集与验证集获取最优分类阈值
             RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
         RightIndex=np.array(RightIndex,dtype=np.float16)
         position=np.argmin(RightIndex)  #选择出使得敏感性特异性最小的阈值作为分类阈值输出
-        print('done_0, 第%s次验证 '%(times)) 
+        alltime_end=time.time()
+        print('done_0, 第%s次验证   , time: %s  s '%(times  alltime_end-alltime_start)) 
 ######################################################################################
     return  position.mean()  #计算交叉验证输出的多个阈值的平均值作为最优分类阈值
 best_th = RUN()
@@ -240,12 +240,14 @@ def RUN_2(best_th):   #主函数，在获得最优分类阈值的情况下计算
     ,"AUC" : np.mean(comm_s_AUC),"time" : np.mean(comm_s_time)}    
     
     return  eva_comm
+time_start=time.time()
 eva_comm_best = RUN_2(best_th)
+time_end=time.time()
+print(' done_2  eva_comm_best,  time: %s s '  %(time_end-time_start))
 
-print(' done_2  eva_comm_best')
-
+time_start=time.time()
 eva_comm_50 = RUN_2(50) #计算患者在默认阈值情况下预测结果的各项指标
-
-print(' done_3  eva_comm_50')
+time_end=time.time()
+print(' done_3  eva_comm_50 ,  time: %s s '  %(time_end-time_start))
 
 

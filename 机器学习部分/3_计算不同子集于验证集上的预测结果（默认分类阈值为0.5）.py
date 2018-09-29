@@ -57,7 +57,7 @@ from sklearn.model_selection import StratifiedKFold
 
 
 
-alltime_start=time.time()
+
 
 
 # 提取原始数据集，只包含病例特征及衍生变量，第一列为subject_id，最后一列为death
@@ -115,6 +115,8 @@ def RUN(jj):  #主函数
     tiaocan_train_test=np.array(tiaocan_train_test,dtype=np.float16)
     times=0
     for train, test in skf.split(tiaocan_train,tiaocan_train_test):
+        alltime_start=time.time()
+
         times=times+1
 
         x_train=tiaocan_train[train]
@@ -168,7 +170,8 @@ def RUN(jj):  #主函数
         pro_comm_Pre = comm.predict_proba(x_test)  #对验证集样本进行预测
         blo_comm_Pre = blo(pro_comm_Pre)   #根据预测概率得出患者生死预测的结果
         eva_comm = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value=pro_comm_Pre)  #计算预测结果的各项评价指标
-        print('done_gbm 第%s次验证 '%(times))
+        alltime_end=time.time()
+        print('done_gbm 第%s次验证, time: %s s '%(times alltime_end-alltime_start))
         
         # 储存每次预测结果的评价指标
         comm_s_BER.append(eva_comm['BER']);
@@ -210,7 +213,7 @@ meanAUCfit=[];stdAUCfit=[];
 
 # 病例的特征及其衍生变量共151个，对151种特征子集进行计算
 for i in range(151):
-    print('done ---------- 第%s个参数 '%(i+1))
+    print('开始 ---------- 第%s个参数 '%(i+1))
     mean_BER_score,std_BER_score,  mean_TPR_score,std_TPR_score,  mean_TNR_score,std_TNR_score,  mean_ACC_score,std_ACC_score,  mean_MCC_score,std_MCC_score,  mean_F1score_score,std_F1score_score,  mean_AUC_score,std_AUC_score=RUN(jj=i+1)
     
     #存储不同特征子集下交叉验证结果的平均值与标准差
