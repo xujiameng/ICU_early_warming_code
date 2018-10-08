@@ -29,7 +29,7 @@ def preprocess(dataset):#将特征值规范化到[0,1]之间
     return X_train01
 
 
-comtest= pd.read_csv("new_0712_pat_with_characteristic_cat_allrunin_complete_in_rf_part_dim_reduction_onehot.csv")
+comtest= pd.read_csv("new_0718_for_order.csv")
 
 def weight():
 #    x_train, datamat, y_train,labelmat = cross_validation.train_test_split(comtest.iloc[0:len(comtest),1:comtest.shape[1]-1],comtest.iloc[0:len(comtest),-1], test_size = 0.2,random_state = j) 
