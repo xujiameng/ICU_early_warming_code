@@ -68,10 +68,10 @@ comtest.iloc[:,0:comtest.shape[1]-1] = scaler.fit_transform(comtest.iloc[:,0:com
 
 
 
-def blo(pro_comm_Pre):     #默认分类阈值为0.5，并根据预测概率值预测患者生死情况
+def blo(pro_comm_Pre, z):     #pro_comm_Pre为模型预测概率，Z为设置的最优分类阈值
     blo_Pre=[];
     for i in range(len(pro_comm_Pre)):
-        if pro_comm_Pre[i,1]>0.5:
+        if pro_comm_Pre[i,1]>z:
             blo_Pre.append(1)
         else:
                 blo_Pre.append(0)
@@ -136,42 +136,44 @@ def RUN(jj):  #主函数
 ############################# --regr-- #############################
         comm =RandomForestClassifier(n_estimators=5000, criterion='entropy', oob_score=True,min_samples_split=10,
                                       random_state=10,  min_samples_leaf=10,n_jobs=-1,warm_start=True)
-        
+        z=0.2
 ############################## --XGB-- #############################
 #        comm = xgb.XGBClassifier(learning_rate =0.01, n_estimators=5000, max_depth=8, min_child_weight=8,n_jobs=8,
 #                                tree_method='exact',objective = 'rank:pairwise',
 #                                colsample_bytree=0.8, reg_alpha=0.005)
-#        
+#        z=0
 ############################## --GBM-- #############################
 #        comm = lgb.LGBMClassifier(max_bin = 255,
 #                                 num_leaves=1000,learning_rate =0.01,n_estimators=5000,n_jobs=-1,
 #                                 reg_alpha=0.08,max_depth=8, min_child_weight=6)  
-#        
+#        z=0.07
 ############################## --Adb-- #############################
 #        comm = ensemble.AdaBoostClassifier(learning_rate =0.1, n_estimators=500)
-#        
-############################## --regr-- #############################
+#        z=0.49
+############################## --SVM-- #############################
 #        comm = svm.SVC(C=0.999, probability=True) 
-#        
+#        z=0.12
 ############################## --Log-- #############################
 #        comm = LogisticRegression(solver='saga',warm_start=True)
-#        
+#        z=0.16
 ############################## --GBN-- #############################
 #        a=0.01
 #        comm = GNB=GaussianNB(priors=[a,1-a])
-#        
+#        z=0.01
 ############################## --DT-- #############################
 #        comm = DecisionTreeClassifier(splitter='random',min_samples_split=20,
 #                                  min_samples_leaf=80 ,max_leaf_nodes=None)
- 
+#        z=0.15
 ##########################################################################################################################  
 ##########################################################################################################################
         comm.fit(x_train , y_train)   #对模型进行训练
         pro_comm_Pre = comm.predict_proba(x_test)  #对验证集样本进行预测
-        blo_comm_Pre = blo(pro_comm_Pre)   #根据预测概率得出患者生死预测的结果
+#########################################################################
+        blo_comm_Pre = blo(pro_comm_Pre, z)   #根据预测概率得出患者生死预测的结果, z为设置的分类阈值参数，每个模型对应的阈值不同
+#########################################################################
         eva_comm = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value=pro_comm_Pre)  #计算预测结果的各项评价指标
         alltime_end=time.time()
-        print('done_gbm 第%s次验证, time: %s s '%(times alltime_end-alltime_start))
+        print('done_gbm 第%s次验证, time: %s s '%(times , alltime_end-alltime_start))
         
         # 储存每次预测结果的评价指标
         comm_s_BER.append(eva_comm['BER']);
