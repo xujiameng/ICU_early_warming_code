@@ -179,14 +179,14 @@ CREATE MATERIALIZED VIEW mimiciii.select_pat_without_label AS
                     CASE
                         WHEN bg.hospital_expire_flag = 0 THEN
                         CASE
-                            WHEN bg.dod < (bg.intime + '30 days'::interval day) THEN 0     --院内入ICU小于30天满足条件
-                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 1    --院内入ICU大于30天等待后续处理
+                            WHEN bg.dod < (bg.intime + '30 days'::interval day) THEN 0     --院外入ICU小于30天不满足条件
+                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 1    --院外入ICU大于30天等待后续处理
                             ELSE NULL::integer
                         END
                         WHEN bg.hospital_expire_flag = 1 THEN
                         CASE
-                            WHEN bg.dod < (bg.intime + '30 days'::interval day) THEN 1    --院外入ICU小于30天等待后续处理
-                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 1    --院外入ICU大于30天等待后续处理
+                            WHEN bg.dod < (bg.intime + '30 days'::interval day) THEN 1    --院内入ICU小于30天等待后续处理
+                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 1    --院内入ICU大于30天等待后续处理
                             ELSE NULL::integer
                         END
                         ELSE NULL::integer
@@ -209,7 +209,7 @@ CREATE MATERIALIZED VIEW mimiciii.select_pat_without_label AS
                         WHEN bg.hospital_expire_flag = 0 THEN
                         CASE
                             WHEN bg.dod < (bg.intime + '30 days'::interval day) THEN 2    --剔除进入ICU后30天内在院外死亡的病例
-                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 0   --30天后院外死亡视为死亡
+                            WHEN bg.dod >= (bg.intime + '30 days'::interval day) THEN 0   --30天后院外死亡视为存活
                             ELSE NULL::integer
                         END
                         WHEN bg.hospital_expire_flag = 1 THEN
