@@ -174,8 +174,8 @@ CREATE MATERIALIZED VIEW mimiciii.select_pat_without_label AS
             bg.*::record AS bg,
             bg.hadm_id,
                 CASE
-                    WHEN bg.expire_flag = 0 THEN 1
-                    WHEN bg.expire_flag = 1 THEN
+                    WHEN bg.expire_flag = 0 THEN 1            --对于没有死亡的患者纳入考虑
+                    WHEN bg.expire_flag = 1 THEN	--对于死亡的患者进行如下判断
                     CASE
                         WHEN bg.hospital_expire_flag = 0 THEN
                         CASE
@@ -203,8 +203,8 @@ CREATE MATERIALIZED VIEW mimiciii.select_pat_without_label AS
             bg.*::record AS bg,
             bg.hadm_id,
                 CASE
-                    WHEN bg.expire_flag = 0 THEN 0
-                    WHEN bg.expire_flag = 1 THEN
+                    WHEN bg.expire_flag = 0 THEN 0          -- 将存活的患者视为存活
+                    WHEN bg.expire_flag = 1 THEN             -- 对最终死亡的患者进行如下判断
                     CASE
                         WHEN bg.hospital_expire_flag = 0 THEN
                         CASE
