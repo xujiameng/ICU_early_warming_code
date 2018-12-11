@@ -1,23 +1,30 @@
-﻿# Description 
-# 程序功能：计算根据传统评分系统所预测出的患者生死预测评价结果
-# 程序流程：
-#       Step1：确定各个传统评分系统的阈值
-#       Step2：计算预测结果的评价指标数值
-# 程序运行结果：各个传统评分系统预测结果的评价指标数值
-#
-# DataFile: 病例为1*N的向量
-#   0808_16g_3kinds_order.csv   包含传统评分模型数值的数据集
-#
-# Output:
-#    eva_sapsii,eva_sofa,eva_apsiii,eva_mews,eva_oasis   各个传统评分系统的评价结果
-# V1.0 2018/8/28
+﻿# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 22 16:09:18 2018
 
+@author: 佳盟
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 22 15:39:13 2018
+
+@author: 佳盟
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 20 10:16:34 2018
+
+@author: dell
+"""
 
 import pandas as pd
 import time
 from sklearn import cross_validation
 import numpy as np
 import random
+from numpy import *
 #调用分类器
 from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb    
@@ -49,25 +56,33 @@ from sklearn.metrics import confusion_matrix
 from sklearn import metrics
 import itertools
 import copy
-from numpy import *
+
 from sklearn.model_selection import StratifiedKFold
 
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+from keras.layers import Dropout
+from keras.optimizers import SGD
+from keras.constraints import maxnorm
 
-alltime_start=time.time()
 
 
 
-model.add(Dense(12, input_dim=8, init='uniform', activation='relu'))
-model.add(Dense(8, init='uniform', activation='relu')) 
-model.add(Dense(1, init='uniform', activation='sigmoid'))
 
 # 提取测试集，训练集
 #comtest= pd.read_csv("new_0712_pat_with_characteristic_cat_allrunin_complete_in_rf_part_dim_reduction_onehot.csv")
 
-comtest= pd.read_csv("new_0731_with_traditional_score.csv")   #只包含传统评分与患者生死结果的数据，与 0808_16g_3kinds_order.csv 最后六列相同
+comtest = pd.read_csv("0904_16g_3kinds_order.csv")
+tt=151;
+z=[]
+for i in range(tt+1):
+    z.append(i)
+z.append(comtest.shape[1]-1)
+comtest = comtest.iloc[:,z]
 
-#scaler = StandardScaler()
-#comtest.iloc[:,0:comtest.shape[1]-1] = scaler.fit_transform(comtest.iloc[:,0:comtest.shape[1]-1])
+
+scaler = StandardScaler()
+comtest.iloc[:,0:comtest.shape[1]-1] = scaler.fit_transform(comtest.iloc[:,0:comtest.shape[1]-1])
 
 
 
@@ -85,202 +100,178 @@ def evaluating_indicator(y_true, y_test, y_test_value):
     ACC = accuracy_score(y_true, y_test)
     MCC = matthews_corrcoef(y_true, y_test)
     F1score =  f1_score(y_true, y_test)
-    AUC = roc_auc_score(y_true,y_test_value)
+    AUC = roc_auc_score(y_true,y_test_value[:,0])
     
     c={"TPR" : TPR,"TNR" : TNR,"BER" : BER
     ,"ACC" : ACC,"MCC" : MCC,"F1_score" : F1score,"AUC" : AUC}
     return c
 
 
-#
-#def blo(pro_comm_Pre):
-#    blo_Pre=[];
-#    for i in range(len(pro_comm_Pre)):
-#        if pro_comm_Pre[i,1]>0.5:
-#            blo_Pre.append(1)
-#        else:
-#                blo_Pre.append(0)
-#    return blo_Pre
-
-
 
 def blo(pro_comm_Pre,jj):
-    blo_Pre=zeros(int(len(pro_comm_Pre)))
-    blo_Pre[(pro_comm_Pre>jj)]=1
+    blo_Pre=zeros(len(pro_comm_Pre))
+    blo_Pre[(pro_comm_Pre[:,0]>(jj*0.01))]=1
     return blo_Pre
 
 
 
+
 def RUN():
-    
-    sapsii_s_TPR=[];sapsii_s_TNR=[];sapsii_s_BER=[];sapsii_s_ACC=[];sapsii_s_MCC=[];sapsii_s_F1score=[];sapsii_s_AUC=[];sapsii_s_th=[];
-    sofa_s_TPR=[];sofa_s_TNR=[];sofa_s_BER=[];sofa_s_ACC=[];sofa_s_MCC=[];sofa_s_F1score=[];sofa_s_AUC=[];sofa_s_th=[];
-    apsiii_s_TPR=[];apsiii_s_TNR=[];apsiii_s_BER=[];apsiii_s_ACC=[];apsiii_s_MCC=[];apsiii_s_F1score=[];apsiii_s_AUC=[];apsiii_s_th=[];
-    mews_s_TPR=[];mews_s_TNR=[];mews_s_BER=[];mews_s_ACC=[];mews_s_MCC=[];mews_s_F1score=[];mews_s_AUC=[];mews_s_th=[];
-    oasis_s_TPR=[];oasis_s_TNR=[];oasis_s_BER=[];oasis_s_ACC=[];oasis_s_MCC=[];oasis_s_F1score=[];oasis_s_AUC=[];oasis_s_th=[];
-    
     tiaocan_train, ceshi_train, tiaocan_train_test, ceshi_true = cross_validation.train_test_split(comtest.iloc[0:len(comtest),1:comtest.shape[1]-1],comtest.iloc[0:len(comtest),-1], test_size = 0.2,random_state = 0)    
-
+    position=[];
     skf=StratifiedKFold(n_splits=10)
-
+#    for times in range(10):
+#    tiaocan_train = comtest.iloc[:,0:comtest.shape[1]-1]
+#    tiaocan_train_test = comtest.iloc[:,-1]
     tiaocan_train=np.array(tiaocan_train,dtype=np.float16)
     tiaocan_train_test=np.array(tiaocan_train_test,dtype=np.float16)
     times=0
-    
+    position=[]
     for train, test in skf.split(tiaocan_train,tiaocan_train_test):
+        alltime_start=time.time()
         times=times+1
 
 
-        x_train_trad=tiaocan_train[train]
+        x_train=tiaocan_train[train]
         y_train=tiaocan_train_test[train]
-        x_test_trad=tiaocan_train[test]
-        y_true=tiaocan_train_test[test]  
+        x_test=tiaocan_train[test]
+        y_true=tiaocan_train_test[test]        
+#        x_train, y_train = RandomUnderSampler().fit_sample(x_train, y_train)
 
+        comm = Sequential()
+        comm.add(Dropout(0.2, input_shape=(tt,)))
+        comm.add(Dense(int(100), init='normal', activation='sigmoid', W_constraint=maxnorm(3)))     
+        comm.add(Dense(int(50), init='normal', activation='sigmoid', W_constraint=maxnorm(3))) 
+ 
 
-    
-#        sapsii
-        sapsii_train =x_train_trad[:,0]
-        sapsii_test =x_test_trad[:,0]
-        
-        position=[]
+        comm.add(Dense(1, init='normal', activation='sigmoid'))
+        sgd = SGD(lr=0.01, momentum=0.8, decay=0.0, nesterov=False)
+        comm.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+        comm.fit(x_train, y_train, nb_epoch=100, batch_size=8000)
+        pro_comm_Pre = comm.predict_proba(x_test)
+
+############################ 最大MCC ###################################################
+#        fpr, tpr, thresholds = roc_curve(y_true, pro_comm_Pre[:,1], pos_label=1)
+#        RightIndex=(tpr+(1-fpr)-1)
+#        positon=np.argmax(RightIndex)
+#        aw=int(positon)   
+#        th=thresholds[aw];
+#        position.append(th)
+#        print('done_0, 第%s次验证 '%(times)) 
+#    position=np.array(position,dtype=np.float16)
+######################## 敏感性特异性相近 ###############################################
         RightIndex=[]
-        for jj in range(int(max(sapsii_train))):
-            blo_comm_Pre = blo(sapsii_train,jj)
-            eva_comm = evaluating_indicator(y_true=y_train, y_test=blo_comm_Pre, y_test_value=sapsii_train)
+        for jj in range(100):
+            blo_comm_Pre = blo(pro_comm_Pre,jj)
+            eva_comm = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value=pro_comm_Pre)
             RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
         RightIndex=np.array(RightIndex,dtype=np.float16)
-        position=np.argmin(RightIndex)  
-        th=position;sapsii_s_th.append(th);     
-        blo_comm_Pre = blo(sapsii_test,th)
-        print('done_10_sapsii, 第%s次验证 '%(times+1))
-#        sapsii_test = np.c_[sapsii_test, sapsii_test]
-        eva_sapsii = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value = sapsii_test)      
-        sapsii_s_TPR.append(eva_sapsii['TPR']);sapsii_s_TNR.append(eva_sapsii['TNR']);sapsii_s_BER.append(eva_sapsii['BER']);
-        sapsii_s_ACC.append(eva_sapsii['ACC']);sapsii_s_MCC.append(eva_sapsii['MCC']);sapsii_s_F1score.append(eva_sapsii['F1_score']);
-        sapsii_s_AUC.append(eva_sapsii['AUC']);
+        position=np.argmin(RightIndex)
         
-        
-#        sofa
-        sofa_train =x_train_trad[:,1]
-        sofa_test =x_test_trad[:,1]
-        
-        position=[]
-        RightIndex=[]
-        for jj in range(int(max(sofa_train))):
-            blo_comm_Pre = blo( sofa_train,jj)
-            eva_comm = evaluating_indicator(y_true=y_train, y_test=blo_comm_Pre, y_test_value=sofa_train)
-            RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
-        RightIndex=np.array(RightIndex,dtype=np.float16)
-        position=np.argmin(RightIndex)  
-        th=position;sofa_s_th.append(th);   
-        blo_comm_Pre = blo(sofa_test ,th)
-        print('done_10_sofa, 第%s次验证 '%(times+1))
-#        sofa_test = np.c_[sofa_test, sofa_test]
-        eva_sofa = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value = sofa_test)      
-        sofa_s_TPR.append(eva_sofa['TPR']);sofa_s_TNR.append(eva_sofa['TNR']);sofa_s_BER.append(eva_sofa['BER']);
-        sofa_s_ACC.append(eva_sofa['ACC']);sofa_s_MCC.append(eva_sofa['MCC']);sofa_s_F1score.append(eva_sofa['F1_score']);
-        sofa_s_AUC.append(eva_sofa['AUC']);
-        
-        
-#        apsiii
-        apsiii_train =x_train_trad[:,2]
-        apsiii_test =x_test_trad[:,2]
-        
-        position=[]
-        RightIndex=[]
-        for jj in range(int(max(apsiii_train))):
-            blo_comm_Pre = blo( apsiii_train,jj)
-            eva_comm = evaluating_indicator(y_true=y_train, y_test=blo_comm_Pre, y_test_value=apsiii_train)
-            RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
-        RightIndex=np.array(RightIndex,dtype=np.float16)
-        position=np.argmin(RightIndex)  
-        th=position;apsiii_s_th.append(th);  
-        blo_comm_Pre = blo( apsiii_test ,th)
-        print('done_10_apsiii, 第%s次验证 '%(times+1))
-#        apsiii_test = np.c_[apsiii_test, apsiii_test]
-        eva_apsiii = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value = apsiii_test)      
-        apsiii_s_TPR.append(eva_apsiii['TPR']);apsiii_s_TNR.append(eva_apsiii['TNR']);apsiii_s_BER.append(eva_apsiii['BER']);
-        apsiii_s_ACC.append(eva_apsiii['ACC']);apsiii_s_MCC.append(eva_apsiii['MCC']);apsiii_s_F1score.append(eva_apsiii['F1_score']);
-        apsiii_s_AUC.append(eva_apsiii['AUC']);
-        
-        
-#        mews
-        mews_train =x_train_trad[:,3]
-        mews_test =x_test_trad[:,3]
-        
-        position=[]
-        RightIndex=[]
-        for jj in range(int(max(mews_train))):
-            blo_comm_Pre = blo( mews_train,jj)
-            eva_comm = evaluating_indicator(y_true=y_train, y_test=blo_comm_Pre, y_test_value=mews_train)
-            RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
-        RightIndex=np.array(RightIndex,dtype=np.float16)
-        position=np.argmin(RightIndex)  
-        th=position;mews_s_th.append(th);  
-        blo_comm_Pre = blo(mews_test,th)
-        print('done_10_mews, 第%s次验证 '%(times+1))
-#        mews_test = np.c_[mews_test, mews_test]
-        eva_mews = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value = mews_test)      
-        mews_s_TPR.append(eva_mews['TPR']);mews_s_TNR.append(eva_mews['TNR']);mews_s_BER.append(eva_mews['BER']);
-        mews_s_ACC.append(eva_mews['ACC']);mews_s_MCC.append(eva_mews['MCC']);mews_s_F1score.append(eva_mews['F1_score']);
-        mews_s_AUC.append(eva_mews['AUC']);
-        
-        
-#        oasis       
-        oasis_train =x_train_trad[:,4]
-        oasis_test =x_test_trad[:,4]
-        
-        position=[]
-        RightIndex=[]
-        for jj in range(int(max(oasis_train))):
-            blo_comm_Pre = blo( oasis_train,jj)
-            eva_comm = evaluating_indicator(y_true=y_train, y_test=blo_comm_Pre, y_test_value=oasis_train)
-            RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
-        RightIndex=np.array(RightIndex,dtype=np.float16)
-        position=np.argmin(RightIndex)  
-        th=position;oasis_s_th.append(th);   
-        blo_comm_Pre = blo(oasis_test,th)
-        print('done_10_oasis, 第%s次验证 '%(times+1))
-#        oasis_test = np.c_[oasis_test, oasis_test]
-        eva_oasis = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value = oasis_test)      
-        oasis_s_TPR.append(eva_oasis['TPR']);oasis_s_TNR.append(eva_oasis['TNR']);oasis_s_BER.append(eva_oasis['BER']);
-        oasis_s_ACC.append(eva_oasis['ACC']);oasis_s_MCC.append(eva_oasis['MCC']);oasis_s_F1score.append(eva_oasis['F1_score']);
-        oasis_s_AUC.append(eva_oasis['AUC']);      
-        
-        
+        alltime_end=time.time()
+        print('done_0, 第%s次验证, time:%s s '%(times,alltime_end-alltime_start)) 
+#        print('time:%s s'%(alltime_end-alltime_start)) 
+######################################################################################
+    return  position.mean()
+best_th = RUN()
 
-    
-    eva_sapsii={"TPR" : np.mean(sapsii_s_TPR),"TNR" : np.mean(sapsii_s_TNR),"BER" :  np.mean(sapsii_s_BER)
-    ,"ACC" : np.mean(sapsii_s_ACC),"MCC" : np.mean(sapsii_s_MCC),"F1_score" : np.mean(sapsii_s_F1score)
-    ,"AUC" : np.mean(sapsii_s_AUC),"th" : np.mean(sapsii_s_th)}
-    
-    eva_sofa={"TPR" : np.mean(sofa_s_TPR),"TNR" : np.mean(sofa_s_TNR),"BER" :  np.mean(sofa_s_BER)
-    ,"ACC" : np.mean(sofa_s_ACC),"MCC" : np.mean(sofa_s_MCC),"F1_score" : np.mean(sofa_s_F1score)
-    ,"AUC" : np.mean(sofa_s_AUC),"th" : np.mean(sofa_s_th)}
-    
-    eva_apsiii={"TPR" : np.mean(apsiii_s_TPR),"TNR" : np.mean(apsiii_s_TNR),"BER" :  np.mean(apsiii_s_BER)
-    ,"ACC" : np.mean(apsiii_s_ACC),"MCC" : np.mean(apsiii_s_MCC),"F1_score" : np.mean(apsiii_s_F1score)
-    ,"AUC" : np.mean(apsiii_s_AUC),"th" : np.mean(apsiii_s_th)}  
-        
-    eva_mews={"TPR" : np.mean(mews_s_TPR),"TNR" : np.mean(mews_s_TNR),"BER" :  np.mean(mews_s_BER)
-    ,"ACC" : np.mean(mews_s_ACC),"MCC" : np.mean(mews_s_MCC),"F1_score" : np.mean(mews_s_F1score)
-    ,"AUC" : np.mean(mews_s_AUC),"th" : np.mean(mews_s_th)}     
-    
-    eva_oasis={"TPR" : np.mean(oasis_s_TPR),"TNR" : np.mean(oasis_s_TNR),"BER" :  np.mean(oasis_s_BER)
-    ,"ACC" : np.mean(oasis_s_ACC),"MCC" : np.mean(oasis_s_MCC),"F1_score" : np.mean(oasis_s_F1score)
-    ,"AUC" : np.mean(oasis_s_AUC),"th" : np.mean(oasis_s_th)}   
+
+#######################################################
+#def RUN():
+#    
+#    tiaocan_train, ceshi_train, tiaocan_train_test, ceshi_true = cross_validation.train_test_split(comtest.iloc[0:len(comtest),1:comtest.shape[1]-1],comtest.iloc[0:len(comtest),-1], test_size = 0.2,random_state = 0)    
+#    position=[];
+#    x_train = tiaocan_train
+#    y_train = tiaocan_train_test
+#    x_test = ceshi_train
+#    y_true = ceshi_true
+#    
+#    x_train=np.array(x_train,dtype=np.float16)
+#    y_train=np.array(y_train,dtype=np.float16)
+#    x_test=np.array(x_test,dtype=np.float16)
+#    y_true=np.array(y_true,dtype=np.float16)
+##    x_train, y_train = RandomUnderSampler().fit_sample(x_train, y_train)
+#    
+#    
+#    comm=xgb.XGBClassifier(learning_rate =0.1, n_estimators=500, max_depth=5, min_child_weight=5,n_jobs=8,
+#                                tree_method='exact',objective = 'rank:pairwise',
+#                                colsample_bytree=0.8, reg_alpha=0.005)
+#    comm.fit(x_train , y_train)
+#    pro_comm_Pre = comm.predict_proba(x_test)
+#    
+#######################################################################################
+#    fpr, tpr, thresholds = roc_curve(y_true, pro_comm_Pre[:,1], pos_label=1)
+#    RightIndex=(tpr+(1-fpr)-1)
+#    positon=np.argmax(RightIndex)
+#    aw=int(positon)   
+#    th=thresholds[aw];
+#    position.append(th) 
+#    position=np.array(position,dtype=np.float16)
+#######################################################################################
+##    RightIndex=[]
+##    for jj in range(100):
+##        blo_comm_Pre = blo(pro_comm_Pre,jj)
+##        eva_comm = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value=pro_comm_Pre)
+##        RightIndex.append(abs(eva_comm['TPR'] - eva_comm['TNR']))
+##    RightIndex=np.array(RightIndex,dtype=np.float16)
+##    position=np.argmin(RightIndex)
+#
+#######################################################################################
+#
+#    return  position
+#best_th = RUN()
+########################################################
+
+
+print(' done_1  best_th')
+
+def RUN_2(best_th):
+    comm_s_TPR=[];comm_s_TNR=[];comm_s_BER=[];comm_s_ACC=[];comm_s_MCC=[];comm_s_F1score=[];comm_s_AUC=[];comm_s_time=[];
+    tiaocan_train, ceshi_train, tiaocan_train_test, ceshi_true = cross_validation.train_test_split(comtest.iloc[0:len(comtest),1:comtest.shape[1]-1],comtest.iloc[0:len(comtest),-1], test_size = 0.2,random_state = 0)    
+
+
+    x_train = tiaocan_train
+    y_train = tiaocan_train_test
+    x_test = ceshi_train
+    y_true = ceshi_true
     
     
-    return eva_sapsii,eva_sofa,eva_apsiii,eva_mews,eva_oasis
+    x_train=np.array(x_train,dtype=np.float16)
+    y_train=np.array(y_train,dtype=np.float16)
+    x_test=np.array(x_test,dtype=np.float16)
+    y_true=np.array(y_true,dtype=np.float16)
+#    x_train, y_train = RandomUnderSampler().fit_sample(x_train, y_train)
+    
+    comm = Sequential()
+    comm.add(Dropout(0.2, input_shape=(tt,)))
+    
+    comm.add(Dense(int(100), init='normal', activation='sigmoid', W_constraint=maxnorm(3))) 
+    comm.add(Dense(int(50), init='normal', activation='sigmoid', W_constraint=maxnorm(3))) 
+
+        
+    comm.add(Dense(1, init='normal', activation='sigmoid'))
+    sgd = SGD(lr=0.01, momentum=0.8, decay=0.0, nesterov=False)
+    comm.compile(loss='binary_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    comm.fit(x_train, y_train, nb_epoch=100, batch_size=8000)
+    
+    pro_comm_Pre = comm.predict_proba(x_test)
+    blo_comm_Pre = blo(pro_comm_Pre,best_th)
+    eva_comm = evaluating_indicator(y_true=y_true, y_test=blo_comm_Pre, y_test_value=pro_comm_Pre)
+ 
+    comm_s_TPR.append(eva_comm['TPR']);comm_s_TNR.append(eva_comm['TNR']);comm_s_BER.append(eva_comm['BER']);
+    comm_s_ACC.append(eva_comm['ACC']);comm_s_MCC.append(eva_comm['MCC']);comm_s_F1score.append(eva_comm['F1_score']);
+    comm_s_AUC.append(eva_comm['AUC']);
+    eva_comm={"TPR" : np.mean(comm_s_TPR),"TNR" : np.mean(comm_s_TNR),"BER" :  np.mean(comm_s_BER)
+    ,"ACC" : np.mean(comm_s_ACC),"MCC" : np.mean(comm_s_MCC),"F1_score" : np.mean(comm_s_F1score)
+    ,"AUC" : np.mean(comm_s_AUC),"time" : np.mean(comm_s_time)}    
+    
+    return  eva_comm
+eva_comm_best = RUN_2(best_th)
+
+print(' done_2  eva_comm_best')
+
+#eva_comm_50 = RUN_2(50)
+#
+#print(' done_3  eva_comm_50')
 
 
-eva_sapsii,eva_sofa,eva_apsiii,eva_mews,eva_oasis=RUN()
-
-
-##########
-alltime_end=time.time()
-
-allruntime=alltime_start-alltime_end
-
-del alltime_end
-del alltime_start
