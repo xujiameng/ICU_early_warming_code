@@ -1,6 +1,7 @@
 # ICU_early_warming_code
 <br>
 <br>
+<a href="https://996.icu"><img src="https://img.shields.io/badge/link-996.icu-red.svg" alt="996.icu"></a>
 　　该文件包含代码与数据，共分为三个部分，主要使用SQL与python进行编程，其中SQL主要用于MIMICIII数据库信息的提取与衍生变量的计算；数据补齐与模型预测部分则依赖python编程实现。考虑到matlab对矩阵处理的灵活性，小部分功能(如MEWS评分计算，最小特征子集的选取等)使用matlab进行编程。<br>
  　　另外，最终未被使用的数据补齐方法（平均数，众数，中位数，K近邻）使用R语言实现<br> <br>
 
